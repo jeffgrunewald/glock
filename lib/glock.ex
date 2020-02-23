@@ -24,6 +24,7 @@ defmodule Glock do
     iex> {:ok, conn} = MySocket.start_link(host: "localhost", path: "/ws")
     {:ok, #PID<0.260.0>}
     iex> :ok = MySocket.send(conn, "hello socket!")
+    :ok
 
   Implementing the `init_stream/1` callback allows you to create and store
   state for the socket connection which can be accessed from subsequent message

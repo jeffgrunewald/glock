@@ -14,15 +14,13 @@ defmodule Glock.MixProject do
       package: package(),
       source_url: @github,
       homepage_url: @github,
-      docs: docs()
+      docs: docs(),
+      dialyzer: [plt_file: {:no_warn, ".dialyzer/#{System.version()}.plt"}]
     ]
   end
 
-  def application do
-    [
-      extra_applications: [:logger]
-    ]
-  end
+  def application,
+    do: [extra_applications: [:logger]]
 
   defp deps do
     [
@@ -49,7 +47,6 @@ defmodule Glock.MixProject do
     ]
   end
 
-  defp description do
-    "Simple websocket client based on the :gun http client library"
-  end
+  defp description,
+    do: "Simple websocket client based on the :gun http client library"
 end

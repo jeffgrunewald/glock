@@ -21,7 +21,7 @@ defmodule Glock.Socket do
       require Logger
       use GenServer
       alias Glock.Conn
-      @@behaviour Glock
+      @behaviour Glock
 
       @doc """
       Synchronously send a message to the remote server via the glock process.
