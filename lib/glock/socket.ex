@@ -36,7 +36,7 @@ defmodule Glock.Socket do
       def push_async(conn, message), do: GenServer.cast(conn, {:push, message})
 
       @impl Glock
-      def init_stream(_opts), do: {:ok, %{}}
+      def init_stream(_opts), do: %{}
 
       @impl Glock
       def handle_push(msg, state) when is_binary(msg) do

@@ -29,7 +29,7 @@ defmodule GlockTest do
     test "receives messages from the server", %{host: host, port: port, path: path} do
       start_and_wait = fn ->
         start_supervised({SimpleSocket, host: host, path: path, port: port})
-        Process.sleep(100)
+        Process.sleep(200)
       end
 
       assert capture_log(start_and_wait) =~ "greetings"
@@ -37,8 +37,24 @@ defmodule GlockTest do
   end
 
   describe "custom handlers" do
-    test "initializes stream state" do
-      :ok
+    test "initializes stream state and handles received msgs", %{host: host, port: port, path: path} do
+      start_supervised({CustomSocket, host: host, port: port, path: path, handler_init_args: self()})
+
+      Process.sleep(100)
+
+      assert_receive {:received_handled, "greetings", 2}
+    end
+
+    test "pushes messages with custom handler", %{host: host, port: port, path: path} do
+      {:ok, client} = start_supervised({CustomSocket, host: host, port: port, path: path, handler_init_args: self()})
+
+      message = "good morning"
+
+      Process.sleep(100)
+
+      CustomSocket.push(client, message)
+      assert_receive {:received_frame, received_message}
+      assert received_message == "this is message 1 : '#{message}'"
     end
   end
 end
@@ -53,17 +69,19 @@ defmodule CustomSocket do
   def init_stream(opts) do
     conn = Keyword.fetch!(opts, :conn)
 
-    {:ok, %{source: conn.handler_init_args, count: 0}}
+    %{source: conn.handler_init_args, sent: 0, received: 0}
   end
 
   def handle_receive({_type, message} = frame, state) do
-    count = state.count + 1
-    send(state.source, {:received_frame, message, count})
+    count = state.received + 1
+    send(state.source, {:received_handled, message, count})
 
-    {frame, {:ok, %{state | count: count}}}
+    {frame, {:ok, %{state | received: count}}}
   end
 
   def handle_push(message, state) do
-    {{:text, message}, {:push, state}}
+    count = state.sent + 1
+    handled_message = "this is message #{count} : '#{message}'"
+    {{:text, handled_message}, {:push, %{state | sent: count}}}
   end
 end
