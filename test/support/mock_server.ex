@@ -56,7 +56,7 @@ defmodule MockSocket do
 
     :timer.send_interval(50, :interval_send)
 
-    if send_close, do: :timer.send_after(200, :close)
+    if send_close, do: :timer.send_after(500, :close)
 
     state = %{source: source, send_close: send_close, count: 0}
 
@@ -64,7 +64,6 @@ defmodule MockSocket do
   end
 
   def websocket_handle({:text, message}, %{source: pid} = state) do
-    IO.inspect(message, label: "RECEIVED FROM TEST")
     send(pid, {:received_frame, "#{message}"})
     {:ok, state}
   end

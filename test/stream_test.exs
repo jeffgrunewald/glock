@@ -5,7 +5,7 @@ defmodule Glock.StreamTest do
     port = 8080
     path = "/ws"
 
-    start_supervised({MockSocket.Supervisor, port: port, path: path})
+    start_supervised({MockSocket.Supervisor, port: port, path: path, send_close: true})
 
     [host: "localhost", port: port, path: path]
   end
@@ -33,6 +33,14 @@ defmodule Glock.StreamTest do
         ["GREETINGS", "GREETINGS", "GREETINGS"],
         ["GREETINGS", "GREETINGS", "GREETINGS"]
       ]
+    end
+
+    test "terminates the stream on a close frame", %{host: host, port: port, path: path} do
+      received = SimpleStream.stream(host: host, port: port, path: path) |> Enum.to_list()
+
+      Process.sleep(500)
+
+      assert Enum.map(0..9, fn _ -> [{:text, "greetings"}] end) == Enum.take(received, 20)
     end
   end
 end

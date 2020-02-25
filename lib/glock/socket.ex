@@ -66,6 +66,15 @@ defmodule Glock.Socket do
         GenServer.start_link(__MODULE__, init_opts, name: name)
       end
 
+      @doc """
+      Start a named glock process outside of a supervision tree,
+      passing all http and websocket configuration options for initialization.
+      """
+      @spec start(Glock.init_opts()) :: GenServer.on_start()
+      def start(init_opts) do
+        GenServer.start(__MODULE__, init_opts)
+      end
+
       @impl GenServer
       def init(init_opts) do
         Process.flag(:trap_exit, true)

@@ -76,7 +76,7 @@ defmodule Glock.Stream do
 
       @impl Glock
       def handle_receive(frame, state) when is_close(frame) do
-        send(state.pid, :close)
+        send(state.pid, {:socket_message, :close})
         {:close, {:close, state}}
       end
 
@@ -88,7 +88,7 @@ defmodule Glock.Stream do
 
       defp initialize(opts) do
         fn ->
-          {:ok, glock} = __MODULE__.start_link(opts)
+          {:ok, glock} = __MODULE__.start(opts)
           %{glock_process: glock}
         end
       end
