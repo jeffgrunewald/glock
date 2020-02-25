@@ -15,6 +15,7 @@ defmodule Glock.MixProject do
       source_url: @github,
       homepage_url: @github,
       docs: docs(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [plt_file: {:no_warn, ".dialyzer/#{System.version()}.plt"}]
     ]
   end
@@ -27,9 +28,13 @@ defmodule Glock.MixProject do
       {:cowlib, "~> 2.8.0", override: true},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.21.0", only: :dev},
-      {:gun, github: "ninenines/gun", tag: "2.0.0-pre.1"}
+      {:gun, github: "ninenines/gun", tag: "2.0.0-pre.1"},
+      {:plug_cowboy, "~> 2.1.0", only: [:test]},
     ]
   end
+
+  defp elixirc_paths(env) when env in [:test], do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp package do
     [

@@ -20,6 +20,7 @@ defmodule Glock.Conn do
             retry_timeout: non_neg_integer,
             transport: :tcp | :tls
           },
+          handler_init_args: term,
           headers: [binary],
           host: charlist,
           monitor: reference,
@@ -41,6 +42,7 @@ defmodule Glock.Conn do
               retry_timeout: 300,
               transport: :tcp
             },
+            handler_init_args: %{},
             headers: [],
             host: nil,
             monitor: nil,
@@ -63,7 +65,20 @@ defmodule Glock.Conn do
   """
   @spec new(keyword) :: t
   def new(opts \\ []) do
-    Enum.reduce(opts, struct(__MODULE__), &put_opts/2)
+    opts
+    |> Enum.reduce(struct(__MODULE__), &put_opts/2)
+    |> set_http_protocol()
+    |> validate_required()
+  end
+
+  defp validate_required(%__MODULE__{host: host, path: path}) when host == nil or path == nil do
+    raise Glock.ConnError, message: "Must supply valid socket host and path"
+  end
+
+  defp validate_required(conn), do: conn
+
+  defp set_http_protocol(%__MODULE__{connect_opts: opts} = conn) do
+    %{conn | connect_opts: Map.put(opts, :protocols, http: %{version: :"HTTP/1.1"})}
   end
 
   defp put_opts({required, value}, conn) when required in [:host, :path] do
@@ -74,7 +89,6 @@ defmodule Glock.Conn do
     merged_opts =
       conn.connect_opts
       |> Map.merge(value, fn _key, _default, override -> override end)
-      |> Map.put(:protocols, http: %{version: :"HTTP/1.1"})
 
     %{conn | connect_opts: merged_opts}
   end

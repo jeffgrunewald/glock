@@ -114,6 +114,7 @@ defmodule Glock do
             retry_timeout: non_neg_integer,
             transport: :tcp | :tls
           },
+          handler_init_args: term,
           headers: [binary],
           host: iodata,
           path: iodata,
@@ -184,4 +185,8 @@ defmodule Glock do
                | {:send, new_state}
                | {:close, new_state}}
             when new_state: term
+
+  defmodule ConnError do
+    defexception [:message]
+  end
 end
