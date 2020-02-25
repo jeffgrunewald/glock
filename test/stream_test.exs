@@ -29,10 +29,10 @@ defmodule Glock.StreamTest do
         |> Enum.take(3)
 
       assert received == [
-        ["GREETINGS", "GREETINGS", "GREETINGS"],
-        ["GREETINGS", "GREETINGS", "GREETINGS"],
-        ["GREETINGS", "GREETINGS", "GREETINGS"]
-      ]
+               ["GREETINGS", "GREETINGS", "GREETINGS"],
+               ["GREETINGS", "GREETINGS", "GREETINGS"],
+               ["GREETINGS", "GREETINGS", "GREETINGS"]
+             ]
     end
 
     test "terminates the stream on a close frame", %{host: host, port: port, path: path} do

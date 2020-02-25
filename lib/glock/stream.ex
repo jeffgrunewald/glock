@@ -96,15 +96,16 @@ defmodule Glock.Stream do
       defp receive_messages(acc) do
         receive do
           {:socket_message, frame} when is_close(frame) ->
-                {:halt, acc}
+            {:halt, acc}
 
           {:socket_message, frame} ->
-                {[frame], acc}
+            {[frame], acc}
         end
       end
 
       defp close(%{glock_process: glock} = acc) do
         ref = Process.monitor(glock)
+
         receive do
           {:DOWN, ^ref, _, _, _} -> :ok
         after
