@@ -157,10 +157,10 @@ defmodule Glock do
   and wrapped in a tuple indicating their format, or else a `:close`
   control frame can be sent.
   """
-  @callback handle_send(message :: term, state :: term) ::
+  @callback handle_push(message :: term, state :: term) ::
               {frame,
                {:ok, new_state}
-               | {:send, new_state}
+               | {:push, new_state}
                | {:close, new_state}}
             when new_state: term
 
@@ -182,7 +182,7 @@ defmodule Glock do
   @callback handle_receive(frame, state :: term) ::
               {frame,
                {:ok, new_state}
-               | {:send, new_state}
+               | {:push, new_state}
                | {:close, new_state}}
             when new_state: term
 

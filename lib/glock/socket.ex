@@ -26,21 +26,21 @@ defmodule Glock.Socket do
       @doc """
       Synchronously send a message to the remote server via the glock process.
       """
-      @spec send(GenServer.server(), term) :: :ok | :close
-      def send(conn, message), do: GenServer.call(conn, {:send, message})
+      @spec push(GenServer.server(), term) :: :ok | :close
+      def push(conn, message), do: GenServer.call(conn, {:push, message})
 
       @doc """
       Asynchronously send a message to the remote server via the glock process.
       """
-      @spec send_async(GenServer.server(), term) :: :ok
-      def send_async(conn, message), do: GenServer.cast(conn, {:send, message})
+      @spec push_async(GenServer.server(), term) :: :ok
+      def push_async(conn, message), do: GenServer.cast(conn, {:push, message})
 
       @impl Glock
       def init_stream(_opts), do: {:ok, %{}}
 
       @impl Glock
-      def handle_send(msg, state) when is_binary(msg) do
-        {{:text, msg}, {:send, state}}
+      def handle_push(msg, state) when is_binary(msg) do
+        {{:text, msg}, {:push, state}}
       end
 
       @impl Glock
@@ -92,11 +92,11 @@ defmodule Glock.Socket do
       end
 
       @impl GenServer
-      def handle_call({:send, message}, _from, conn) do
-        {frame, {result, new_state}} = handle_send(message, conn.stream_state)
+      def handle_call({:push, message}, _from, conn) do
+        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             {:reply, :gun.ws_send(conn.client, frame), update_stream_state(conn, new_state)}
 
           :ok ->
@@ -109,11 +109,11 @@ defmodule Glock.Socket do
       end
 
       @impl GenServer
-      def handle_cast({:send, message}, conn) do
-        {frame, {result, new_state}} = handle_send(message, conn.stream_state)
+      def handle_cast({:push, message}, conn) do
+        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             :gun.ws_send(conn.client, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
@@ -133,7 +133,7 @@ defmodule Glock.Socket do
         {frame, {result, new_state}} = handle_receive(frame, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             :ok = :gun.ws_send(conn.client, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
@@ -189,7 +189,7 @@ defmodule Glock.Socket do
       end
 
       defoverridable init_stream: 1,
-                     handle_send: 2,
+                     handle_push: 2,
                      handle_receive: 2
 
       defp update_stream_state(conn, state), do: Map.put(conn, :stream_state, state)

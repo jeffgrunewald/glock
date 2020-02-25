@@ -16,12 +16,12 @@ defmodule GlockTest do
       Process.sleep(100)
 
       message1 = "hello socket"
-      SimpleSocket.send(client, message1)
+      SimpleSocket.push(client, message1)
 
       assert_receive {:received_frame, message1}
 
       message2 = "hello async"
-      SimpleSocket.send_async(client, message2)
+      SimpleSocket.push_async(client, message2)
 
       assert_receive {:received_frame, message2}
     end
@@ -50,15 +50,20 @@ end
 defmodule CustomSocket do
   use Glock.Socket
 
-  def init_stream(_opts) do
-    {:ok, %{}}
+  def init_stream(opts) do
+    conn = Keyword.fetch!(opts, :conn)
+
+    {:ok, %{source: conn.handler_init_args, count: 0}}
   end
 
-  def handle_receive(frame, state) do
-    {frame, {:ok, state}}
+  def handle_receive({_type, message} = frame, state) do
+    count = state.count + 1
+    send(state.source, {:received_frame, message, count})
+
+    {frame, {:ok, %{state | count: count}}}
   end
 
-  def handle_send(message, state) do
-    {{:text, message}, {:send, state}}
+  def handle_push(message, state) do
+    {{:text, message}, {:push, state}}
   end
 end
