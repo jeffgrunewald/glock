@@ -78,7 +78,9 @@ defmodule Glock.Socket do
         {:ok, client} = :gun.open(conn.host, conn.port, conn.connect_opts)
         {:ok, :http} = :gun.await_up(client)
 
-        Logger.info(fn -> "Connected to #{conn.host}:#{conn.port} on process : #{inspect(client)}" end)
+        Logger.info(fn ->
+          "Connected to #{conn.host}:#{conn.port} on process : #{inspect(client)}"
+        end)
 
         {:noreply, %{conn | client: client, monitor: Process.monitor(client)},
          {:continue, :upgrade}}
@@ -153,9 +155,9 @@ defmodule Glock.Socket do
           ) do
         stream_state = init_stream(conn: conn, protocols: protocols, headers: headers)
 
-        Logger.info(
-          fn -> "Connection #{inspect(conn.client)} successfully upgrade : #{inspect(stream)}" end
-        )
+        Logger.info(fn ->
+          "Connection #{inspect(conn.client)} successfully upgrade : #{inspect(stream)}"
+        end)
 
         {:noreply, update_stream_state(conn, stream_state)}
       end

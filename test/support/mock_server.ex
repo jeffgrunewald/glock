@@ -8,7 +8,6 @@ defmodule MockSocket.Supervisor do
   def init(init_args) do
     port = Keyword.get(init_args, :port)
     path = Keyword.get(init_args, :path)
-    source = Keyword.get(init_args, :source)
 
     [
       {Plug.Cowboy,
@@ -20,7 +19,7 @@ defmodule MockSocket.Supervisor do
            dispatch: [
              {:_,
               [
-                {"/#{path}", MockSocket, source}
+                {"/#{path}", MockSocket, init_args}
               ]}
            ],
            protocol_options: [{:idle_timeout, 60_000}]
@@ -51,15 +50,21 @@ defmodule MockSocket do
     {:cowboy_websocket, req, opts}
   end
 
-  def websocket_init(source) do
+  def websocket_init(opts) do
+    source = Keyword.get(opts, :source)
+    send_close = Keyword.get(opts, :send_close, false)
+
     :timer.send_interval(50, :interval_send)
 
-    state = %{source: source, count: 0}
+    if send_close, do: :timer.send_after(200, :close)
+
+    state = %{source: source, send_close: send_close, count: 0}
 
     {:ok, state}
   end
 
   def websocket_handle({:text, message}, %{source: pid} = state) do
+    IO.inspect(message, label: "RECEIVED FROM TEST")
     send(pid, {:received_frame, "#{message}"})
     {:ok, state}
   end
@@ -72,6 +77,10 @@ defmodule MockSocket do
 
   def websocket_info(:interval_send, state) do
     {:reply, {:text, "greetings"}, state}
+  end
+
+  def websocket_info(:close, state) do
+    {:reply, {:close, "goodbye"}, state}
   end
 
   def websocket_info(_, state) do

@@ -186,6 +186,12 @@ defmodule Glock do
                | {:close, new_state}}
             when new_state: term
 
+  defmacro is_close(frame) do
+    quote do
+      unquote(frame) == :close or unquote(frame) |> elem(0) == :close
+    end
+  end
+
   defmodule ConnError do
     defexception [:message]
   end

@@ -43,7 +43,7 @@ defmodule Glock.Stream do
         quote do
           @spec stream(Glock.init_opts()) :: Enumerable.t()
           def stream(opts) do
-            stream_opts = Keyword.put(:handler_init_args, %{pid: self()})
+            stream_opts = Keyword.put(opts, :handler_init_args, %{pid: self()})
 
             Stream.resource(
               initialize(stream_opts),
@@ -59,17 +59,25 @@ defmodule Glock.Stream do
   defmacro __using__(opts) do
     chunk_size = Keyword.get(opts, :chunk_every, 1)
 
-    quote do
+    quote location: :keep do
       Module.put_attribute(__MODULE__, :chunk_size, unquote(chunk_size))
+      import Glock, only: [is_close: 1]
       use Glock.Socket
       @on_definition Glock.Stream
       @before_compile Glock.Stream
       @behaviour Glock.Stream
+      @transform false
 
       @impl Glock
       def init_stream(opts) do
         conn = Keyword.fetch!(opts, :conn)
-        {:ok, conn.handler_init_args}
+        conn.handler_init_args
+      end
+
+      @impl Glock
+      def handle_receive(frame, state) when is_close(frame) do
+        send(state.pid, :close)
+        {:close, {:close, state}}
       end
 
       @impl Glock
@@ -87,14 +95,11 @@ defmodule Glock.Stream do
 
       defp receive_messages(acc) do
         receive do
-          {:socket_message, frame} ->
-            case frame do
-              close when close in [:close, {:close, _}] ->
+          {:socket_message, frame} when is_close(frame) ->
                 {:halt, acc}
 
-              _ ->
+          {:socket_message, frame} ->
                 {[frame], acc}
-            end
         end
       end
 

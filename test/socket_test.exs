@@ -1,4 +1,4 @@
-defmodule GlockTest do
+defmodule Glock.SocketTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
@@ -37,8 +37,14 @@ defmodule GlockTest do
   end
 
   describe "custom handlers" do
-    test "initializes stream state and handles received msgs", %{host: host, port: port, path: path} do
-      start_supervised({CustomSocket, host: host, port: port, path: path, handler_init_args: self()})
+    test "initializes stream state and handles received msgs", %{
+      host: host,
+      port: port,
+      path: path
+    } do
+      start_supervised(
+        {CustomSocket, host: host, port: port, path: path, handler_init_args: self()}
+      )
 
       Process.sleep(100)
 
@@ -46,7 +52,10 @@ defmodule GlockTest do
     end
 
     test "pushes messages with custom handler", %{host: host, port: port, path: path} do
-      {:ok, client} = start_supervised({CustomSocket, host: host, port: port, path: path, handler_init_args: self()})
+      {:ok, client} =
+        start_supervised(
+          {CustomSocket, host: host, port: port, path: path, handler_init_args: self()}
+        )
 
       message = "good morning"
 
