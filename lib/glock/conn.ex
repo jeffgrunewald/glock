@@ -16,6 +16,7 @@ defmodule Glock.Conn do
           client: pid,
           connect_opts: %{
             connect_timeout: non_neg_integer,
+            protocols: [http: %{version: :"HTTP/1.1"}],
             retry: non_neg_integer,
             retry_timeout: non_neg_integer,
             transport: :tcp | :tls
@@ -63,8 +64,8 @@ defmodule Glock.Conn do
   default values with the exception of the http protocol which is locked
   to HTTP/1.1 for websocket compatibility.
   """
-  @spec new(keyword) :: t
-  def new(opts \\ []) do
+  @spec new(keyword) :: Glock.Conn.t()
+  def new(opts) do
     opts
     |> Enum.reduce(struct(__MODULE__), &put_opts/2)
     |> set_http_protocol()
