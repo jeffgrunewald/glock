@@ -5,32 +5,54 @@ defmodule Glock.StreamTest do
     port = 8080
     path = "/ws"
 
-    {:ok, server} =
-      start_supervised({MockSocket.Supervisor, port: port, path: path, send_close: true})
+    start_supervised({MockSocket.Supervisor, port: port, path: path})
 
-    [server: server, host: "localhost", port: port, path: path]
+    [host: "localhost", port: port, path: path]
   end
 
   describe "Glock.Stream" do
     test "streams data lazily while the connection is active", %{
-      server: server,
       host: host,
       port: port,
       path: path
     } do
-      stream_data =
+      received =
         SimpleStream.stream(host: host, path: path, port: port)
-        |> IO.inspect(label: "STREAM START")
+        |> Enum.take(10)
 
-      :timer.send_after(200, server, :close)
+      assert received == Enum.map(0..9, fn _ -> [{:text, "greetings"}] end)
+    end
 
-      stream_data |> Stream.run()
+    test "streams data through transform and chunk", %{host: host, port: port, path: path} do
+      received =
+        CustomStream.stream(host: host, path: path, port: port)
+        |> Enum.take(3)
 
-      assert stream_data == ["greetings"]
+      assert received == [
+        ["GREETINGS", "GREETINGS", "GREETINGS"],
+        ["GREETINGS", "GREETINGS", "GREETINGS"],
+        ["GREETINGS", "GREETINGS", "GREETINGS"]
+      ]
     end
   end
 end
 
 defmodule SimpleStream do
   use Glock.Stream
+end
+
+defmodule CustomStream do
+  use Glock.Stream, chunk_every: 3
+
+  @impl Glock.Stream
+  def handle_transform(stream) do
+    Stream.transform(stream, 0, &do_upcase/2)
+  end
+
+  defp do_upcase(elem, acc) do
+    case elem do
+      elem when is_close(elem) -> {:halt, acc}
+      {:text, msg} -> {[String.upcase(msg)], acc + 1}
+    end
+  end
 end

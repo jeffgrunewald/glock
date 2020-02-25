@@ -27,7 +27,7 @@ defmodule Glock.Stream do
         quote do
           @spec stream(Glock.init_opts()) :: Enumerable.t()
           def stream(opts) do
-            stream_opts = Keyword.put(:handler_init_args, %{pid: self()})
+            stream_opts = Keyword.put(opts, :handler_init_args, %{pid: self()})
 
             Stream.resource(
               initialize(stream_opts),
@@ -104,7 +104,13 @@ defmodule Glock.Stream do
       end
 
       defp close(%{glock_process: glock} = acc) do
-        Process.exit(glock, :normal)
+        ref = Process.monitor(glock)
+        receive do
+          {:DOWN, ^ref, _, _, _} -> :ok
+        after
+          1_000 -> Process.exit(glock, :normal)
+        end
+
         acc
       end
     end
