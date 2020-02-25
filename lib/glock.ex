@@ -114,6 +114,7 @@ defmodule Glock do
             retry_timeout: non_neg_integer,
             transport: :tcp | :tls
           },
+          handler_init_args: term,
           headers: [binary],
           host: iodata,
           path: iodata,
@@ -156,10 +157,10 @@ defmodule Glock do
   and wrapped in a tuple indicating their format, or else a `:close`
   control frame can be sent.
   """
-  @callback handle_send(message :: term, state :: term) ::
+  @callback handle_push(message :: term, state :: term) ::
               {frame,
                {:ok, new_state}
-               | {:send, new_state}
+               | {:push, new_state}
                | {:close, new_state}}
             when new_state: term
 
@@ -181,7 +182,17 @@ defmodule Glock do
   @callback handle_receive(frame, state :: term) ::
               {frame,
                {:ok, new_state}
-               | {:send, new_state}
+               | {:push, new_state}
                | {:close, new_state}}
             when new_state: term
+
+  defmacro is_close(frame) do
+    quote do
+      unquote(frame) == :close or unquote(frame) |> elem(0) == :close
+    end
+  end
+
+  defmodule ConnError do
+    defexception [:message]
+  end
 end

@@ -26,21 +26,21 @@ defmodule Glock.Socket do
       @doc """
       Synchronously send a message to the remote server via the glock process.
       """
-      @spec send(GenServer.server(), term) :: :ok | :close
-      def send(conn, message), do: GenServer.call(conn, {:send, message})
+      @spec push(GenServer.server(), term) :: :ok | :close
+      def push(conn, message), do: GenServer.call(conn, {:push, message})
 
       @doc """
       Asynchronously send a message to the remote server via the glock process.
       """
-      @spec send_async(GenServer.server(), term) :: :ok
-      def send(conn, message), do: GenServer.cast(conn, {:send, message})
+      @spec push_async(GenServer.server(), term) :: :ok
+      def push_async(conn, message), do: GenServer.cast(conn, {:push, message})
 
       @impl Glock
-      def init_stream(opts), do: {:ok, %{}}
+      def init_stream(_opts), do: %{}
 
       @impl Glock
-      def handle_send(msg, state) when is_binary(msg) do
-        {{:text, msg}, {:send, state}}
+      def handle_push(msg, state) when is_binary(msg) do
+        {{:text, msg}, {:push, state}}
       end
 
       @impl Glock
@@ -66,6 +66,15 @@ defmodule Glock.Socket do
         GenServer.start_link(__MODULE__, init_opts, name: name)
       end
 
+      @doc """
+      Start a named glock process outside of a supervision tree,
+      passing all http and websocket configuration options for initialization.
+      """
+      @spec start(Glock.init_opts()) :: GenServer.on_start()
+      def start(init_opts) do
+        GenServer.start(__MODULE__, init_opts)
+      end
+
       @impl GenServer
       def init(init_opts) do
         Process.flag(:trap_exit, true)
@@ -78,7 +87,9 @@ defmodule Glock.Socket do
         {:ok, client} = :gun.open(conn.host, conn.port, conn.connect_opts)
         {:ok, :http} = :gun.await_up(client)
 
-        Logger.info("Connected to #{conn.host}:#{conn.port} on process : #{inspect(client)}")
+        Logger.info(fn ->
+          "Connected to #{conn.host}:#{conn.port} on process : #{inspect(client)}"
+        end)
 
         {:noreply, %{conn | client: client, monitor: Process.monitor(client)},
          {:continue, :upgrade}}
@@ -92,11 +103,11 @@ defmodule Glock.Socket do
       end
 
       @impl GenServer
-      def handle_call({:send, message}, _from, conn) do
-        {frame, {result, new_state}} = handle_send(message, conn.stream_state)
+      def handle_call({:push, message}, _from, conn) do
+        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             {:reply, :gun.ws_send(conn.client, frame), update_stream_state(conn, new_state)}
 
           :ok ->
@@ -109,11 +120,11 @@ defmodule Glock.Socket do
       end
 
       @impl GenServer
-      def handle_cast({:send, message}, conn) do
-        {frame, {result, new_state}} = handle_send(message, conn.stream_state)
+      def handle_cast({:push, message}, conn) do
+        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             :gun.ws_send(conn.client, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
@@ -128,12 +139,12 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def handle_info({:gun_ws, client, stream, frame}, %{client: client, stream: stream} = conn) do
-        Logger.debug("Received frame from socket #{inspect(stream)} : #{inspect(frame)}")
+        Logger.debug(fn -> "Received frame from socket #{inspect(stream)} : #{inspect(frame)}" end)
 
         {frame, {result, new_state}} = handle_receive(frame, conn.stream_state)
 
         case result do
-          :send ->
+          :push ->
             :ok = :gun.ws_send(conn.client, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
@@ -153,16 +164,22 @@ defmodule Glock.Socket do
           ) do
         stream_state = init_stream(conn: conn, protocols: protocols, headers: headers)
 
-        Logger.info(
+        Logger.info(fn ->
           "Connection #{inspect(conn.client)} successfully upgrade : #{inspect(stream)}"
-        )
+        end)
 
         {:noreply, update_stream_state(conn, stream_state)}
       end
 
       @impl GenServer
+      def handle_info({:gun_error, _client, {:badstate, _reason}}, state) do
+        Logger.warn(fn -> "Connection not finished upgrading, too quick on the draw" end)
+        {:noreply, state}
+      end
+
+      @impl GenServer
       def handle_info({:DOWN, ref, _, _, _}, %{monitor: ref} = conn) do
-        Logger.warn("Connection to socket #{inspect(conn.stream)} lost; reconnecting...")
+        Logger.warn(fn -> "Connection to socket #{inspect(conn.stream)} lost; reconnecting..." end)
 
         {:noreply, conn, {:continue, :connect}}
       end
@@ -174,7 +191,7 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def terminate(reason, conn) do
-        Logger.info("Terminating client process with reason : #{inspect(reason)}")
+        Logger.info(fn -> "Terminating client process with reason : #{inspect(reason)}" end)
 
         Process.demonitor(conn.monitor)
         :gun.flush(conn.stream)
@@ -183,7 +200,7 @@ defmodule Glock.Socket do
       end
 
       defoverridable init_stream: 1,
-                     handle_send: 2,
+                     handle_push: 2,
                      handle_receive: 2
 
       defp update_stream_state(conn, state), do: Map.put(conn, :stream_state, state)
