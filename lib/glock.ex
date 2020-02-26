@@ -186,7 +186,7 @@ defmodule Glock do
                | {:close, new_state}}
             when new_state: term
 
-  defdelegate stream(opts), to: Glock.Stream
+  # defdelegate stream(opts), to: Glock.Stream
 
   defmacro is_close(frame) do
     quote do
