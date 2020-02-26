@@ -25,7 +25,6 @@ defmodule Glock.MixProject do
 
   defp deps do
     [
-      {:cowlib, "~> 2.8.0", override: true},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.21.0", only: :dev},
       {:gun, "~> 1.3"},
