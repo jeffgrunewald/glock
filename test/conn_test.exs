@@ -7,7 +7,6 @@ defmodule Glock.ConnTest do
       client: nil,
       connect_opts: %{
         connect_timeout: 60000,
-        protocols: [http: %{version: :"HTTP/1.1"}],
         retry: 10,
         retry_timeout: 300,
         transport: :tcp
@@ -31,7 +30,6 @@ defmodule Glock.ConnTest do
       client: nil,
       connect_opts: %{
         connect_timeout: 30000,
-        protocols: [http: %{version: :"HTTP/1.1"}],
         retry: 5,
         retry_timeout: 300,
         transport: :tcp

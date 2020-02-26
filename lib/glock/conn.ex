@@ -16,7 +16,6 @@ defmodule Glock.Conn do
           client: pid,
           connect_opts: %{
             connect_timeout: non_neg_integer,
-            protocols: [http: %{version: :"HTTP/1.1"}],
             retry: non_neg_integer,
             retry_timeout: non_neg_integer,
             transport: :tcp | :tls
@@ -68,7 +67,6 @@ defmodule Glock.Conn do
   def new(opts) do
     opts
     |> Enum.reduce(struct(__MODULE__), &put_opts/2)
-    |> set_http_protocol()
     |> validate_required()
   end
 
@@ -77,10 +75,6 @@ defmodule Glock.Conn do
   end
 
   defp validate_required(conn), do: conn
-
-  defp set_http_protocol(%__MODULE__{connect_opts: opts} = conn) do
-    %{conn | connect_opts: Map.put(opts, :protocols, http: %{version: :"HTTP/1.1"})}
-  end
 
   defp put_opts({required, value}, conn) when required in [:host, :path] do
     Map.put(conn, required, to_charlist(value))
