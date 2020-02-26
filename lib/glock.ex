@@ -158,11 +158,7 @@ defmodule Glock do
   control frame can be sent.
   """
   @callback handle_push(message :: term, state :: term) ::
-              {frame,
-               {:ok, new_state}
-               | {:push, new_state}
-               | {:close, new_state}}
-            when new_state: term
+              {:ok | :push | :close, frame, term}
 
   @doc """
   Processes messages received by the client application from the
@@ -180,11 +176,9 @@ defmodule Glock do
   the process exits, cleaning up its state.
   """
   @callback handle_receive(frame, state :: term) ::
-              {frame,
-               {:ok, new_state}
-               | {:push, new_state}
-               | {:close, new_state}}
-            when new_state: term
+              {:ok | :push | :close, frame, term}
+
+  defdelegate stream(opts), to: Glock.Stream
 
   defmacro is_close(frame) do
     quote do

@@ -23,6 +23,12 @@ defmodule Glock.Socket do
       alias Glock.Conn
       @behaviour Glock
 
+      @dialyzer [
+        {:no_match, handle_call: 3},
+        {:no_match, handle_cast: 2},
+        {:no_match, handle_info: 2}
+      ]
+
       @doc """
       Synchronously send a message to the remote server via the glock process.
       """
@@ -40,11 +46,16 @@ defmodule Glock.Socket do
 
       @impl Glock
       def handle_push(msg, state) when is_binary(msg) do
-        {{:text, msg}, {:push, state}}
+        {:push, {:text, msg}, state}
       end
 
       @impl Glock
-      def handle_receive(frame, state), do: {frame, {:ok, state}}
+      def handle_push({:close, reason}, state) do
+        {:close, {:close, reason}, state}
+      end
+
+      @impl Glock
+      def handle_receive(frame, state), do: {:ok, frame, state}
 
       @doc """
       Start a named glock process and link it to the calling process,
@@ -104,7 +115,7 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def handle_call({:push, message}, _from, conn) do
-        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
+        {result, frame, new_state} = handle_push(message, conn.stream_state)
 
         case result do
           :push ->
@@ -121,7 +132,7 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def handle_cast({:push, message}, conn) do
-        {frame, {result, new_state}} = handle_push(message, conn.stream_state)
+        {result, frame, new_state} = handle_push(message, conn.stream_state)
 
         case result do
           :push ->
@@ -141,7 +152,7 @@ defmodule Glock.Socket do
       def handle_info({:gun_ws, client, stream, frame}, %{client: client, stream: stream} = conn) do
         Logger.debug(fn -> "Received frame from socket #{inspect(stream)} : #{inspect(frame)}" end)
 
-        {frame, {result, new_state}} = handle_receive(frame, conn.stream_state)
+        {result, frame, new_state} = handle_receive(frame, conn.stream_state)
 
         case result do
           :push ->

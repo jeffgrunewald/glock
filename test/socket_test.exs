@@ -85,12 +85,12 @@ defmodule CustomSocket do
     count = state.received + 1
     send(state.source, {:received_handled, message, count})
 
-    {frame, {:ok, %{state | received: count}}}
+    {:ok, frame, %{state | received: count}}
   end
 
   def handle_push(message, state) do
     count = state.sent + 1
     handled_message = "this is message #{count} : '#{message}'"
-    {{:text, handled_message}, {:push, %{state | sent: count}}}
+    {:push, {:text, handled_message}, %{state | sent: count}}
   end
 end
