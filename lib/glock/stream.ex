@@ -28,7 +28,7 @@ defmodule Glock.Stream do
   @impl Glock
   def handle_receive(frame, state) when is_close(frame) do
     send(state.pid, {:socket_message, :close})
-    {:close, :close, state}
+    {:close, frame, state}
   end
 
   @impl Glock

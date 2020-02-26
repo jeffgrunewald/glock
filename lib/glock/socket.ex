@@ -23,6 +23,12 @@ defmodule Glock.Socket do
       alias Glock.Conn
       @behaviour Glock
 
+      @dialyzer [
+        {:no_match, handle_call: 3},
+        {:no_match, handle_cast: 2},
+        {:no_match, handle_info: 2}
+      ]
+
       @doc """
       Synchronously send a message to the remote server via the glock process.
       """
@@ -41,6 +47,11 @@ defmodule Glock.Socket do
       @impl Glock
       def handle_push(msg, state) when is_binary(msg) do
         {:push, {:text, msg}, state}
+      end
+
+      @impl Glock
+      def handle_push({:close, reason}, state) do
+        {:close, {:close, reason}, state}
       end
 
       @impl Glock
