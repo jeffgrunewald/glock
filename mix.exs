@@ -1,19 +1,22 @@
 defmodule Glock.MixProject do
   use Mix.Project
 
-  @github "https://github.com/jeffgrunewald/glock"
+  @name "Glock"
+  @version "0.1.1"
+  @repo "https://github.com/jeffgrunewald/glock"
 
   def project do
     [
       app: :glock,
-      version: "0.1.0",
+      name: @name,
+      version: @version,
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
       package: package(),
-      source_url: @github,
-      homepage_url: @github,
+      source_url: @repo,
+      homepage_url: @repo,
       docs: docs(),
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [plt_file: {:no_warn, ".dialyzer/#{System.version()}.plt"}]
@@ -25,11 +28,11 @@ defmodule Glock.MixProject do
 
   defp deps do
     [
-      {:cowlib, "~> 2.8.0", override: true},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.21.0", only: :dev},
+      {:cowlib, "~> 2.10", override: true},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.23", only: :dev},
       {:gun, "~> 1.3"},
-      {:plug_cowboy, "~> 2.1.0", only: [:test]}
+      {:plug_cowboy, "~> 2.4", only: [:test]}
     ]
   end
 
@@ -40,15 +43,15 @@ defmodule Glock.MixProject do
     [
       maintainers: ["Jeff Grunewald"],
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => @github}
+      links: %{"GitHub" => @repo}
     ]
   end
 
   defp docs do
     [
-      source_url: @github,
-      extras: ["README.md"],
-      source_url_pattern: "#{@github}/blob/master/%{path}#L%{line}"
+      source_ref: "#{@repo}",
+      source_url: @repo,
+      main: @name
     ]
   end
 

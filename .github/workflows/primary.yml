@@ -1,17 +1,17 @@
-name: Master
+name: Primary
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   dialyzer:
     name: Cache PLT
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1.2.0
+      - uses: actions/setup-elixir@v1.5.0
         with:
-          otp-version: 22.2
+          otp-version: 22.3.4
           elixir-version: 1.9.4
       - name: Get dependencies
         run: |
@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: .dialyzer
-          key: plt-master
+          key: plt-main
       - name: Run dialyzer
         run: |
           mix dialyzer
