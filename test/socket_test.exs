@@ -18,12 +18,12 @@ defmodule Glock.SocketTest do
       message1 = "hello socket"
       SimpleSocket.push(client, message1)
 
-      assert_receive {:received_frame, message1}
+      assert_receive {:received_frame, ^message1}
 
       message2 = "hello async"
       SimpleSocket.push_async(client, message2)
 
-      assert_receive {:received_frame, message2}
+      assert_receive {:received_frame, ^message2}
     end
 
     test "receives messages from the server", %{host: host, port: port, path: path} do

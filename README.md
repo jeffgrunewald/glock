@@ -22,7 +22,7 @@ Example:
     use Glock.Socket
   end
 
-  iex> {:ok, conn} = MySocket.start_link(host: "localhost", path: "/ws")
+  iex> {:ok, conn} = MySocket.start_link(host: "echo.websocket.org", path: "/")
   {:ok, #PID<0.260.0>}
   iex> :ok = MySocket.send(conn, "hello socket!")
 ```

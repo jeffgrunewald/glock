@@ -2,16 +2,16 @@ name: CI
 on:
   pull_request:
     branches:
-      - master
+      - main
 jobs:
   unit:
     name: Unit Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1.2.0
+      - uses: actions/setup-elixir@v1.5.0
         with:
-          otp-version: 22.2
+          otp-version: 22.3.4
           elixir-version: 1.9.4
       - name: Get depedencies
         run: |
@@ -26,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1.2.0
+      - uses: actions/setup-elixir@v1.5.0
         with:
-          otp-version: 22.2
+          otp-version: 22.3.4
           elixir-version: 1.9.4
       - name: Retrieve cached PLT
         uses: actions/cache@v1
@@ -37,7 +37,7 @@ jobs:
           key: plt-${{ github.head_ref }}
           restore-keys: |
             plt-${{ github.base_ref }}
-            plt-master
+            plt-main
             plt-
       - name: Get dependencies
         run: |
