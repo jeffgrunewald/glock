@@ -28,11 +28,11 @@ defmodule Glock.MixProject do
 
   defp deps do
     [
-      {:cowlib, "~> 2.10", override: true},
+      {:cowlib, "~> 2.7"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.23", only: :dev},
-      {:gun, "~> 1.3"},
-      {:plug_cowboy, "~> 2.4", only: [:test]}
+      {:gun, "~> 1.3.3"},
+      {:plug_cowboy, "~> 2.1", only: [:test]}
     ]
   end
 
