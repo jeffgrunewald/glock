@@ -24,7 +24,7 @@ Example:
 
   iex> {:ok, conn} = MySocket.start_link(host: "echo.websocket.org", path: "/")
   {:ok, #PID<0.260.0>}
-  iex> :ok = MySocket.send(conn, "hello socket!")
+  iex> :ok = MySocket.push(conn, "hello socket!")
 ```
 
 Implementing the `init_stream/1` callback allows you to create and store
