@@ -1,17 +1,29 @@
 defmodule Glock.SocketTest do
   use ExUnit.Case
+
   import ExUnit.CaptureLog
 
   setup do
     port = 8080
     path = "/ws"
-    start_supervised({MockSocket.Supervisor, port: port, path: path, source: self()})
-    [host: "localhost", port: port, path: path]
+    transport = :tcp
+
+    start_supervised(
+      {MockSocket.Supervisor, port: port, path: path, source: self(), transport: transport}
+    )
+
+    [host: "localhost", port: port, path: path, transport: transport]
   end
 
   describe "simple socket" do
-    test "sends messages to the server", %{host: host, port: port, path: path} do
-      {:ok, client} = start_supervised({SimpleSocket, host: host, path: path, port: port})
+    test "sends messages to the server", %{
+      host: host,
+      port: port,
+      path: path,
+      transport: transport
+    } do
+      {:ok, client} =
+        start_supervised({SimpleSocket, host: host, path: path, port: port, transport: transport})
 
       Process.sleep(100)
 
@@ -26,9 +38,14 @@ defmodule Glock.SocketTest do
       assert_receive {:received_frame, ^message2}
     end
 
-    test "receives messages from the server", %{host: host, port: port, path: path} do
+    test "receives messages from the server", %{
+      host: host,
+      port: port,
+      path: path,
+      transport: transport
+    } do
       start_and_wait = fn ->
-        start_supervised({SimpleSocket, host: host, path: path, port: port})
+        start_supervised({SimpleSocket, host: host, path: path, port: port, transport: transport})
         Process.sleep(200)
       end
 
@@ -40,10 +57,12 @@ defmodule Glock.SocketTest do
     test "initializes stream state and handles received msgs", %{
       host: host,
       port: port,
-      path: path
+      path: path,
+      transport: transport
     } do
       start_supervised(
-        {CustomSocket, host: host, port: port, path: path, handler_init_args: self()}
+        {CustomSocket,
+         host: host, port: port, path: path, handler_init_args: self(), transport: transport}
       )
 
       Process.sleep(100)
@@ -51,10 +70,16 @@ defmodule Glock.SocketTest do
       assert_receive {:received_handled, "greetings", 2}
     end
 
-    test "pushes messages with custom handler", %{host: host, port: port, path: path} do
+    test "pushes messages with custom handler", %{
+      host: host,
+      port: port,
+      path: path,
+      transport: transport
+    } do
       {:ok, client} =
         start_supervised(
-          {CustomSocket, host: host, port: port, path: path, handler_init_args: self()}
+          {CustomSocket,
+           host: host, port: port, path: path, handler_init_args: self(), transport: transport}
         )
 
       message = "good morning"

@@ -108,7 +108,7 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def handle_continue(:upgrade, conn) do
-        stream = :gun.ws_upgrade(conn.client, conn.path, conn.headers)
+        stream = :gun.ws_upgrade(conn.client, conn.path, conn.headers, conn.ws_opts)
 
         {:noreply, %{conn | stream: stream}}
       end
@@ -119,13 +119,14 @@ defmodule Glock.Socket do
 
         case result do
           :push ->
-            {:reply, :gun.ws_send(conn.client, frame), update_stream_state(conn, new_state)}
+            {:reply, :gun.ws_send(conn.client, conn.stream, frame),
+             update_stream_state(conn, new_state)}
 
           :ok ->
             {:reply, :ok, update_stream_state(conn, new_state)}
 
           :close ->
-            {:stop, :close, :gun.ws_send(conn.client, frame),
+            {:stop, :close, :gun.ws_send(conn.client, conn.stream, frame),
              update_stream_state(conn, new_state)}
         end
       end
@@ -136,14 +137,14 @@ defmodule Glock.Socket do
 
         case result do
           :push ->
-            :gun.ws_send(conn.client, frame)
+            :gun.ws_send(conn.client, conn.stream, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
           :ok ->
             {:noreply, update_stream_state(conn, new_state)}
 
           :close ->
-            :gun.ws_send(conn.client, frame)
+            :gun.ws_send(conn.client, conn.stream, frame)
             {:stop, :close, update_stream_state(conn, new_state)}
         end
       end
@@ -156,14 +157,14 @@ defmodule Glock.Socket do
 
         case result do
           :push ->
-            :ok = :gun.ws_send(conn.client, frame)
+            :ok = :gun.ws_send(conn.client, stream, frame)
             {:noreply, update_stream_state(conn, new_state)}
 
           :ok ->
             {:noreply, update_stream_state(conn, new_state)}
 
           :close ->
-            :gun.ws_send(conn.client, frame)
+            :gun.ws_send(conn.client, stream, frame)
             {:stop, :close, update_stream_state(conn, new_state)}
         end
       end

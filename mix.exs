@@ -2,7 +2,7 @@ defmodule Glock.MixProject do
   use Mix.Project
 
   @name "Glock"
-  @version "0.1.1"
+  @version "0.1.3"
   @repo "https://github.com/jeffgrunewald/glock"
 
   def project do
@@ -28,11 +28,13 @@ defmodule Glock.MixProject do
 
   defp deps do
     [
-      {:cowlib, "~> 2.7"},
+      {:certifi, "~> 2.9", optional: true},
+      {:cowlib, "~> 2.11.0"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.23", only: :dev},
-      {:gun, "~> 1.3.3"},
-      {:plug_cowboy, "~> 2.1", only: [:test]}
+      {:gun, "~> 2.0.0-rc.2"},
+      {:plug_cowboy, "~> 2.5", only: [:test]},
+      {:ssl_verify_fun, "~> 1.1", optional: true}
     ]
   end
 
