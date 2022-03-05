@@ -108,7 +108,7 @@ defmodule Glock.Socket do
 
       @impl GenServer
       def handle_continue(:upgrade, conn) do
-        stream = :gun.ws_upgrade(conn.client, conn.path, conn.headers)
+        stream = :gun.ws_upgrade(conn.client, conn.path, conn.headers, conn.ws_opts)
 
         {:noreply, %{conn | stream: stream}}
       end
